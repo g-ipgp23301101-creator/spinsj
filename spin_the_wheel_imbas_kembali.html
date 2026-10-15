@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SPIN THE WHEEL: IMBAS KEMBALI - MISI NEGARAKU</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Canvas Confetti Library -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-dark: #020617;
+            --nyellow: #facc15;
+            --nred: #ef4444;
+            --nblue: #2563eb;
+            --nwhite: #f8fafc;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--nwhite);
+            overflow-x: hidden;
+            touch-action: manipulation;
+        }
+
+        .font-orbitron {
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        /* Neon Glow Effects */
+        .glow-yellow {
+            text-shadow: 0 0 10px rgba(250, 204, 21, 0.7), 0 0 20px rgba(250, 204, 21, 0.5), 0 0 30px rgba(250, 204, 21, 0.3);
+        }
+
+        .glow-blue {
+            text-shadow: 0 0 10px rgba(37, 99, 235, 0.8), 0 0 20px rgba(37, 99, 235, 0.6);
+        }
+
+        .box-glow-yellow {
+            box-shadow: 0 0 25px rgba(250, 204, 21, 0.4), inset 0 0 15px rgba(250, 204, 21, 0.2);
+        }
+
+        .box-glow-blue {
+            box-shadow: 0 0 30px rgba(37, 99, 235, 0.5), inset 0 0 15px rgba(37, 99, 235, 0.3);
+        }
+
+        .box-glow-red {
+            box-shadow: 0 0 25px rgba(239, 68, 68, 0.5);
+        }
+
+        /* Glassmorphism */
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+
+        /* Animated Grid & Particle BG */
+        .bg-grid {
+            background-size: 40px 40px;
+            background-image: 
+                linear-gradient(to right, rgba(37, 99, 235, 0.1) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(37, 99, 235, 0.1) 1px, transparent 1px);
+        }
+
+        /* Hologram Lines */
+        .hologram-line {
+            background: linear-gradient(90deg, transparent, rgba(250, 204, 21, 0.8), transparent);
+            animation: scanline 4s linear infinite;
+        }
+
+        @keyframes scanline {
+            0% { transform: translateY(-100%); }
+            100% { transform: translateY(1000%); }
+        }
+
+        /* Custom Buttons */
+        .btn-neon {
+            background: linear-gradient(135deg, #facc15 0%, #ca8a04 100%);
+            color: #020617;
+            font-weight: 800;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 20px rgba(250, 204, 21, 0.5);
+        }
+
+        .btn-neon:hover:not(:disabled) {
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 0 35px rgba(250, 204, 21, 0.8);
+        }
+
+        .btn-neon:active:not(:disabled) {
+            transform: translateY(1px);
+        }
+
+        .btn-neon:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        /* Canvas Wheel Shadows */
+        #wheelCanvas {
+            filter: drop-shadow(0 0 20px rgba(250, 204, 21, 0.3));
+        }
+
+        /* Floating Stars Animation */
+        @keyframes floatSlow {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-12px) rotate(5deg); }
+        }
+
+        .animate-float {
+            animation: floatSlow 4s ease-in-out infinite;
+        }
+
+        /* Card Scale Modal Animation */
+        @keyframes cardPop {
+            0% { opacity: 0; transform: scale(0.7) translateY(50px); }
+            100% { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        .animate-card {
+            animation: cardPop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+    </style>
+</head>
+<body class="bg-grid min-h-screen flex flex-col justify-between items-center relative select-none">
+
+    <!-- Background Ambient Glows -->
+    <div class="fixed top-1/4 -left-20 w-80 h-80 bg-blue-600/20 rounded-full blur-3xl pointer-events-none"></div>
+    <div class="fixed bottom-1/4 -right-20 w-80 h-80 bg-red-600/20 rounded-full blur-3xl pointer-events-none"></div>
+    <div class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-yellow-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+    <!-- SCANLINE HOLOGRAM EFFECT -->
+    <div class="fixed inset-0 pointer-events-none overflow-hidden opacity-30 z-0">
+        <div class="hologram-line w-full h-2"></div>
+    </div>
+
+    <!-- TOP BAR / HEADER -->
+    <header class="w-full max-w-6xl px-4 py-3 mt-2 flex justify-between items-center z-10 glass-panel rounded-2xl border-yellow-500/30">
+        <div class="flex items-center gap-3">
+            <!-- Jalur Gemilang Icon SVG -->
+            <div class="w-10 h-10 rounded-lg overflow-hidden border border-yellow-400/50 shadow-md flex-shrink-0 bg-blue-900 flex items-center justify-center">
+                <svg viewBox="0 0 100 60" class="w-full h-full object-cover">
+                    <rect width="100" height="60" fill="#cc0000"/>
+                    <path d="M0,8.57 H100 M0,25.71 H100 M0,42.85 H100" stroke="#ffffff" stroke-width="8.57"/>
+                    <rect width="50" height="34.28" fill="#000066"/>
+                    <!-- Moon -->
+                    <path d="M 22,5.2 A 12,12 0 1,0 22,29.1 A 10,10 0 1,1 22,5.2 Z" fill="#ffcc00"/>
+                    <!-- 14-point Star -->
+                    <polygon points="35,6 36.5,12 42,8 39,13.5 45,15 39.5,18 43,23 37,21 37.5,27.5 33.5,22.5 30,27 31.5,21 26,22 30,17.5 25,14 31,13.5 30,7.5 34.5,11.5" fill="#ffcc00"/>
+                </svg>
+            </div>
+            <div>
+                <h1 class="font-orbitron font-extrabold text-sm sm:text-lg text-yellow-400 tracking-wider glow-yellow leading-tight">
+                    SPIN THE WHEEL
+                </h1>
+                <p class="text-xs text-blue-200 tracking-widest font-semibold">
+                    SEJARAH T4/T5 • IDENTITI NEGARA KITA
+                </p>
+            </div>
+        </div>
+
+        <!-- AUDIO & PROGRESS CONTROLS -->
+        <div class="flex items-center gap-3">
+            <!-- Audio Toggle Button -->
+            <button id="audioToggleBtn" onclick="toggleAudio()" class="px-3 py-2 rounded-xl bg-slate-800/80 hover:bg-slate-700 border border-slate-600 text-yellow-400 transition-all flex items-center gap-2 text-xs sm:text-sm font-semibold">
+                <i id="audioIcon" class="fas fa-volume-up"></i>
+                <span id="audioText" class="hidden sm:inline">MUZIK: ON</span>
+            </button>
+
+            <!-- Question Progress Badge -->
+            <div class="px-3 py-1.5 rounded-xl bg-blue-950/80 border border-blue-500/50 text-xs sm:text-sm font-bold text-blue-200 flex items-center gap-2">
+                <i class="fas fa-tasks text-yellow-400"></i>
+                <span>SELESAI: <span id="progressText" class="text-yellow-400 font-extrabold text-sm sm:text-base">0/7</span></span>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN INTERACTIVE CONTAINER -->
+    <main class="w-full max-w-4xl flex-1 flex flex-col justify-center items-center relative z-10 px-4 py-4">
+
+        <!-- ========================================== -->
+        <!-- SCREEN 1: LANDING / START SCREEN           -->
+        <!-- ========================================== -->
+        <div id="startScreen" class="w-full text-center flex flex-col items-center justify-center space-y-6 py-6 glass-panel rounded-3xl p-6 sm:p-10 border-yellow-500/40 box-glow-blue">
+            
+            <!-- Emblem / Bintang 14 Bucuk -->
+            <div class="relative animate-float">
+                <div class="w-24 h-24 sm:w-32 sm:h-32 bg-gradient-to-tr from-yellow-500 to-amber-300 rounded-full flex items-center justify-center shadow-lg box-glow-yellow border-4 border-blue-900">
+                    <i class="fas fa-star text-blue-950 text-5xl sm:text-6xl"></i>
+                </div>
+                <div class="absolute -bottom-2 -right-2 bg-red-600 text-white text-xs px-2.5 py-1 rounded-full font-bold border border-white">
+                    KBAT
+                </div>
+            </div>
+
+            <div class="space-y-2">
+                <h2 class="text-3xl sm:text-5xl font-orbitron font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-yellow-400 to-amber-500 glow-yellow tracking-wide">
+                    SPIN THE WHEEL
+                </h2>
+                <h3 class="text-lg sm:text-2xl font-bold text-blue-300 tracking-wider">
+                    IMBAS KEMBALI: MISI NEGARAKU
+                </h3>
+                <p class="text-xs sm:text-sm text-slate-300 max-w-lg mx-auto pt-2">
+                    Uji kefahaman dan pemikiran aras tinggi (KBAT) mengenai sejarah, maksud lirik, serta etika pusingan Lagu Kebangsaan <span class="text-yellow-400 font-bold">Negaraku</span>.
+                </p>
+            </div>
+
+            <!-- Rules Box -->
+            <div class="w-full max-w-md bg-slate-900/80 rounded-2xl p-4 border border-blue-500/30 text-left text-xs sm:text-sm text-slate-300 space-y-2">
+                <div class="font-bold text-yellow-400 flex items-center gap-2 border-b border-slate-700 pb-2">
+                    <i class="fas fa-info-circle"></i> PANDUAN PERMAINAN:
+                </div>
+                <ul class="list-disc list-inside space-y-1 text-slate-300">
+                    <li>Putar roda untuk memilih 1 daripada 7 soalan KBAT.</li>
+                    <li>Setiap soalan hanya boleh diputar <span class="text-yellow-400 font-semibold">SEKALI</span> sahaja.</li>
+                    <li>Jawab soalan secara lisan atau perbincangan kelas.</li>
+                    <li>Selesaikan kesemua 7 soalan untuk menamatkan Misi!</li>
+                </ul>
+            </div>
+
+            <button onclick="startGame()" class="btn-neon px-8 py-4 rounded-2xl text-lg sm:text-xl font-orbitron tracking-wider flex items-center gap-3 mt-4">
+                <i class="fas fa-play text-xl"></i> MULA PERMAINAN
+            </button>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- SCREEN 2: WHEEL / GAMEPLAY SCREEN          -->
+        <!-- ========================================== -->
+        <div id="gameScreen" class="hidden w-full flex-col items-center justify-center space-y-6">
+            
+            <!-- WHEEL CONTAINER -->
+            <div class="relative flex items-center justify-center p-2">
+                
+                <!-- WHEEL POINTER / INDICATOR AT TOP -->
+                <div class="absolute -top-5 z-30 flex flex-col items-center filter drop-shadow-lg">
+                    <div class="w-8 h-10 bg-gradient-to-b from-yellow-300 to-yellow-500 clip-pointer border-2 border-white rounded-t-sm" style="clip-path: polygon(100% 0, 0 0, 50% 100%);"></div>
+                    <i class="fas fa-caret-down text-yellow-400 text-3xl -mt-3"></i>
+                </div>
+
+                <!-- CANVAS RODA -->
+                <div class="relative rounded-full p-2 bg-gradient-to-tr from-yellow-500 via-red-600 to-blue-700 box-glow-yellow">
+                    <canvas id="wheelCanvas" width="380" height="380" class="max-w-[85vw] max-h-[85vw] sm:w-[380px] sm:h-[380px] rounded-full cursor-pointer"></canvas>
+                    
+                    <!-- CENTER STAR BADGE -->
+                    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 sm:w-20 sm:h-20 bg-blue-950 rounded-full border-4 border-yellow-400 flex items-center justify-center shadow-2xl z-20 pointer-events-none">
+                        <i class="fas fa-star text-yellow-400 text-2xl sm:text-3xl glow-yellow"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SPIN BUTTON -->
+            <div class="flex flex-col items-center gap-3">
+                <button id="spinBtn" onclick="spinWheel()" class="btn-neon px-10 py-4 rounded-2xl text-lg sm:text-2xl font-orbitron tracking-wider flex items-center gap-3 box-glow-yellow">
+                    <i class="fas fa-sync-alt animate-spin-hover"></i> PUTAR SEKARANG!
+                </button>
+                <p id="wheelStatus" class="text-xs sm:text-sm text-blue-300 font-semibold animate-pulse">
+                    Tekan butang di atas untuk memutar roda soalan.
+                </p>
+            </div>
+
+            <!-- REMAINING QUESTIONS TRACKER -->
+            <div class="w-full max-w-md glass-panel p-3 rounded-2xl border-blue-500/30 flex justify-center items-center gap-2">
+                <span class="text-xs text-slate-300 font-bold">STATUS SOALAN:</span>
+                <div id="questionBadges" class="flex gap-1.5">
+                    <!-- Badges 1-7 injected via JS -->
+                </div>
+            </div>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- SCREEN 3: QUESTION MODAL / CARD            -->
+        <!-- ========================================== -->
+        <div id="questionModal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+            <div class="glass-panel w-full max-w-2xl rounded-3xl p-6 sm:p-8 border-2 border-yellow-400 box-glow-yellow animate-card flex flex-col items-center text-center space-y-6 relative overflow-hidden">
+                
+                <!-- Top Light Accent -->
+                <div class="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-blue-600 via-yellow-400 to-red-600"></div>
+
+                <!-- QUESTION HEADER -->
+                <div class="flex items-center gap-3 bg-blue-950/80 border border-blue-500/50 px-5 py-2 rounded-full">
+                    <i class="fas fa-microphone-alt text-yellow-400 text-lg"></i>
+                    <span id="modalQuestionNumber" class="font-orbitron font-extrabold text-yellow-400 text-sm sm:text-base">
+                        SOALAN KBAT #1
+                    </span>
+                </div>
+
+                <!-- QUESTION TEXT CARD -->
+                <div class="w-full bg-slate-900/90 rounded-2xl p-6 border border-slate-700 min-h-[160px] flex items-center justify-center shadow-inner">
+                    <p id="modalQuestionText" class="text-lg sm:text-2xl font-bold text-white leading-relaxed tracking-wide">
+                        <!-- Text inserted dynamically -->
+                    </p>
+                </div>
+
+                <!-- FOOTER / NEXT BUTTON -->
+                <div class="w-full flex justify-center pt-2">
+                    <button onclick="closeQuestionModal()" class="btn-neon px-8 py-3.5 rounded-2xl text-base sm:text-lg font-orbitron tracking-wider flex items-center gap-2">
+                        <i class="fas fa-redo"></i> PUTAR LAGI
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- SCREEN 4: VICTORY SCREEN                   -->
+        <!-- ========================================== -->
+        <div id="victoryScreen" class="hidden w-full text-center flex-col items-center justify-center space-y-6 glass-panel rounded-3xl p-8 sm:p-12 border-4 border-yellow-400 box-glow-yellow">
+            <div class="w-24 h-24 bg-yellow-400/20 rounded-full flex items-center justify-center border-4 border-yellow-400 animate-bounce">
+                <i class="fas fa-trophy text-yellow-400 text-5xl glow-yellow"></i>
+            </div>
+
+            <div class="space-y-2">
+                <h2 class="text-3xl sm:text-5xl font-orbitron font-black text-yellow-400 glow-yellow">
+                    TAHNIAH!
+                </h2>
+                <h3 class="text-xl sm:text-2xl font-bold text-white">
+                    MISI NEGARAKU SELESAI!
+                </h3>
+                <p class="text-sm sm:text-base text-slate-300 max-w-md mx-auto pt-2">
+                    Syabas! Kamu telah berjaya menjawab dan menguasai kesemua 7 Soalan KBAT Identiti Negara Kita: Lagu Kebangsaan Negaraku.
+                </p>
+            </div>
+
+            <button onclick="restartGame()" class="btn-neon px-8 py-4 rounded-2xl text-lg font-orbitron tracking-wider flex items-center gap-3">
+                <i class="fas fa-sync-alt"></i> MAIN SEMULA
+            </button>
+        </div>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="w-full max-w-6xl px-4 py-3 mb-2 text-center text-xs text-slate-400 z-10">
+        Subjek Sejarah Tahun 5 • Unit Identiti Negara Kita • Kementerian Pendidikan Malaysia
+    </footer>
+
+    <!-- ========================================== -->
+    <!-- JAVASCRIPT LOGIC                           -->
+    <!-- ========================================== -->
+    <script>
+        /* ----------------------------------------------------
+           1. GAME DATA & QUESTIONS (EXACT TEXT)
+        ---------------------------------------------------- */
+        const QUESTIONS = [
+            { id: 1, text: "Mengapakah Lagu Negaraku perlu dinyanyikan dengan penuh penghayatan?" },
+            { id: 2, text: "Apakah yang mungkin berlaku jika rakyat tidak menghormati Lagu Negaraku?" },
+            { id: 3, text: "Lirik “Rakyat hidup bersatu dan maju” menggalakkan perpaduan. Apakah satu tindakan yang boleh kamu lakukan untuk mengamalkan maksud lirik tersebut di dalam kelas?" },
+            { id: 4, text: "Pada pendapat kamu, antara perpaduan rakyat dengan kemajuan negara, yang manakah perlu diberikan perhatian terlebih dahulu? Berikan alasan." },
+            { id: 5, text: "Kamu sedang berbual dengan rakan apabila Lagu Negaraku dimainkan. Apakah tindakan yang patut kamu lakukan? Mengapa?" },
+            { id: 6, text: "Kamu melihat rakan masih bermain ketika Lagu Negaraku dimainkan. Bagaimanakah kamu boleh menegurnya dengan cara yang baik?" },
+            { id: 7, text: "Seorang murid berdiri tegak ketika Lagu Negaraku dimainkan tetapi masih bergurau dengan rakannya. Adakah tindakan murid itu menunjukkan rasa hormat yang sepenuhnya? Jelaskan." }
+        ];
+
+        // Track completed question IDs
+        let completedQuestions = [];
+        let currentQuestion = null;
+        let isSpinning = false;
+
+        /* ----------------------------------------------------
+           2. CANVAS WHEEL RENDERING & ANGLE MATH
+        ---------------------------------------------------- */
+        const canvas = document.getElementById('wheelCanvas');
+        const ctx = canvas.getContext('2d');
+        const numSlices = 7;
+        const sliceAngle = (2 * Math.PI) / numSlices;
+        
+        // Colors corresponding to Jalur Gemilang theme
+        const sliceColors = [
+            '#000066', // Biru Tua Jalur Gemilang
+            '#cc0000', // Merah Terang
+            '#f1f5f9', // Putih
+            '#ffcc00', // Kuning Keemasan
+            '#000066', // Biru Tua
+            '#cc0000', // Merah Terang
+            '#ffcc00'  // Kuning Keemasan
+        ];
+
+        const textColors = [
+            '#ffffff', // Putih atas Biru
+            '#ffffff', // Putih atas Merah
+            '#020617', // Gelap atas Putih
+            '#020617', // Gelap atas Kuning
+            '#ffffff', // Putih atas Biru
+            '#ffffff', // Putih atas Merah
+            '#020617'  // Gelap atas Kuning
+        ];
+
+        let currentRotationAngle = 0; // Cumulative angle in radians
+
+        function drawWheel() {
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const radius = canvas.width / 2 - 10;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            for (let i = 0; i < numSlices; i++) {
+                const qNum = i + 1;
+                const isCompleted = completedQuestions.includes(qNum);
+                
+                // Calculate section start/end angle based on current rotation
+                const startAngle = currentRotationAngle + (i * sliceAngle);
+                const endAngle = startAngle + sliceAngle;
+
+                // Draw Slice Arc
+                ctx.beginPath();
+                ctx.moveTo(centerX, centerY);
+                ctx.arc(centerX, centerY, radius, startAngle, endAngle);
+                ctx.closePath();
+
+                // Style Slice (Dim if completed)
+                if (isCompleted) {
+                    ctx.fillStyle = '#334155'; // Dimmed greyish-blue
+                } else {
+                    ctx.fillStyle = sliceColors[i];
+                }
+                ctx.fill();
+
+                // Slice Border
+                ctx.lineWidth = 3;
+                ctx.strokeStyle = '#facc15';
+                ctx.stroke();
+
+                // Draw Number Text
+                ctx.save();
+                ctx.translate(centerX, centerY);
+                ctx.rotate(startAngle + sliceAngle / 2);
+                ctx.textAlign = 'right';
+                ctx.textBaseline = 'middle';
+
+                if (isCompleted) {
+                    ctx.fillStyle = '#94a3b8';
+                } else {
+                    ctx.fillStyle = textColors[i];
+                }
+
+                ctx.font = 'bold 28px Orbitron, sans-serif';
+                // Offset number outwards
+                ctx.fillText(qNum.toString(), radius - 30, 0);
+
+                // Add Checkmark icon for completed
+                if (isCompleted) {
+                    ctx.font = 'bold 18px FontAwesome';
+                    ctx.fillText('✓', radius - 65, 0);
+                }
+
+                ctx.restore();
+            }
+
+            // Outer Neon Border Ring
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+            ctx.lineWidth = 6;
+            ctx.strokeStyle = '#facc15';
+            ctx.stroke();
+        }
+
+        /* ----------------------------------------------------
+           3. WEB AUDIO API SYNTHESIZER (NO EXTERNAL FILES)
+        ---------------------------------------------------- */
+        let audioCtx = null;
+        let isMuted = false;
+        let bgOscillator = null;
+        let bgGainNode = null;
+        let bgInterval = null;
+
+        function initAudio() {
+            if (!audioCtx) {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                audioCtx = new AudioContext();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        // Play short sound effects using Web Audio API
+        function playSound(type) {
+            if (isMuted) return;
+            initAudio();
+
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            const now = audioCtx.currentTime;
+
+            if (type === 'click') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(600, now);
+                osc.frequency.exponentialRampToValueAtTime(200, now + 0.05);
+                gain.gain.setValueAtTime(0.3, now);
+                gain.gain.linearRampToValueAtTime(0.01, now + 0.05);
+                osc.start(now);
+                osc.stop(now + 0.05);
+            } else if (type === 'tick') {
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(400, now);
+                gain.gain.setValueAtTime(0.15, now);
+                gain.gain.linearRampToValueAtTime(0.01, now + 0.03);
+                osc.start(now);
+                osc.stop(now + 0.03);
+            } else if (type === 'cardOpen') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(300, now);
+                osc.frequency.exponentialRampToValueAtTime(800, now + 0.2);
+                gain.gain.setValueAtTime(0.3, now);
+                gain.gain.linearRampToValueAtTime(0.01, now + 0.2);
+                osc.start(now);
+                osc.stop(now + 0.2);
+            } else if (type === 'fanfare') {
+                // Short melody fanfare
+                const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+                notes.forEach((freq, index) => {
+                    const noteOsc = audioCtx.createOscillator();
+                    const noteGain = audioCtx.createGain();
+                    noteOsc.type = 'triangle';
+                    noteOsc.frequency.setValueAtTime(freq, now + index * 0.1);
+                    noteGain.gain.setValueAtTime(0.3, now + index * 0.1);
+                    noteGain.gain.linearRampToValueAtTime(0.01, now + index * 0.1 + 0.25);
+                    noteOsc.connect(noteGain);
+                    noteGain.connect(audioCtx.destination);
+                    noteOsc.start(now + index * 0.1);
+                    noteOsc.stop(now + index * 0.1 + 0.25);
+                });
+            } else if (type === 'victory') {
+                // Grand victory arpeggio
+                const notes = [392, 523.25, 659.25, 783.99, 1046.50, 1318.51];
+                notes.forEach((freq, index) => {
+                    const noteOsc = audioCtx.createOscillator();
+                    const noteGain = audioCtx.createGain();
+                    noteOsc.type = 'sine';
+                    noteOsc.frequency.setValueAtTime(freq, now + index * 0.12);
+                    noteGain.gain.setValueAtTime(0.4, now + index * 0.12);
+                    noteGain.gain.linearRampToValueAtTime(0.01, now + index * 0.12 + 0.4);
+                    noteOsc.connect(noteGain);
+                    noteGain.connect(audioCtx.destination);
+                    noteOsc.start(now + index * 0.12);
+                    noteOsc.stop(now + index * 0.12 + 0.4);
+                });
+            }
+        }
+
+        // Soft Patriotic Synth Background Loop
+        function startBgMusic() {
+            if (bgInterval || isMuted) return;
+            initAudio();
+
+            bgGainNode = audioCtx.createGain();
+            bgGainNode.gain.setValueAtTime(0.05, audioCtx.currentTime); // Low volume background
+            bgGainNode.connect(audioCtx.destination);
+
+            // Simple ambient chord progression (Patriotic major chords)
+            const chords = [
+                [261.63, 329.63, 392.00], // C Maj
+                [220.00, 261.63, 329.63], // A Min
+                [174.61, 220.00, 261.63], // F Maj
+                [196.00, 246.94, 293.66]  // G Maj
+            ];
+
+            let step = 0;
+            bgInterval = setInterval(() => {
+                if (isMuted || !bgGainNode) return;
+                const now = audioCtx.currentTime;
+                const chord = chords[step % chords.length];
+                
+                chord.forEach(freq => {
+                    const osc = audioCtx.createOscillator();
+                    const noteGain = audioCtx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(freq, now);
+                    noteGain.gain.setValueAtTime(0.03, now);
+                    noteGain.gain.exponentialRampToValueAtTime(0.001, now + 1.8);
+                    osc.connect(noteGain);
+                    noteGain.connect(bgGainNode);
+                    osc.start(now);
+                    osc.stop(now + 1.8);
+                });
+                step++;
+            }, 2000);
+        }
+
+        function setBgVolume(level) {
+            if (bgGainNode && audioCtx) {
+                bgGainNode.gain.linearRampToValueAtTime(level, audioCtx.currentTime + 0.3);
+            }
+        }
+
+        function toggleAudio() {
+            isMuted = !isMuted;
+            const icon = document.getElementById('audioIcon');
+            const text = document.getElementById('audioText');
+
+            if (isMuted) {
+                icon.className = 'fas fa-volume-mute text-red-400';
+                text.innerText = 'MUZIK: OFF';
+                if (bgInterval) {
+                    clearInterval(bgInterval);
+                    bgInterval = null;
+                }
+            } else {
+                icon.className = 'fas fa-volume-up text-yellow-400';
+                text.innerText = 'MUZIK: ON';
+                startBgMusic();
+            }
+        }
+
+        /* ----------------------------------------------------
+           4. GAME STATE & LOGIC
+        ---------------------------------------------------- */
+        function startGame() {
+            playSound('click');
+            initAudio();
+            startBgMusic();
+
+            document.getElementById('startScreen').classList.add('hidden');
+            document.getElementById('gameScreen').classList.remove('hidden');
+            document.getElementById('gameScreen').classList.add('flex');
+
+            updateProgressUI();
+            drawWheel();
+        }
+
+        function updateProgressUI() {
+            document.getElementById('progressText').innerText = `${completedQuestions.length}/7`;
+
+            // Update status badges 1-7
+            const container = document.getElementById('questionBadges');
+            container.innerHTML = '';
+
+            for (let i = 1; i <= 7; i++) {
+                const badge = document.createElement('div');
+                badge.className = `w-7 h-7 rounded-lg flex items-center justify-center font-orbitron font-bold text-xs border ${
+                    completedQuestions.includes(i)
+                        ? 'bg-slate-800 border-slate-600 text-slate-500 line-through'
+                        : 'bg-blue-900/80 border-yellow-400 text-yellow-400 shadow-sm'
+                }`;
+                badge.innerText = i;
+                container.appendChild(badge);
+            }
+        }
+
+        /* ----------------------------------------------------
+           5. EXACT ANGLE DETERMINATION SPIN WHEEL LOGIC
+        ---------------------------------------------------- */
+        function spinWheel() {
+            if (isSpinning) return;
+
+            // Check remaining questions
+            const unasked = QUESTIONS.filter(q => !completedQuestions.includes(q.id));
+            if (unasked.length === 0) {
+                showVictoryScreen();
+                return;
+            }
+
+            playSound('click');
+            isSpinning = true;
+
+            const spinBtn = document.getElementById('spinBtn');
+            spinBtn.disabled = true;
+            document.getElementById('wheelStatus').innerText = "Roda sedang berputar...";
+
+            // 1. Pick a random target question ID from unasked list
+            const targetQ = unasked[Math.floor(Math.random() * unasked.length)];
+            const targetIndex = targetQ.id - 1; // 0-indexed
+
+            // 2. Compute exact required rotation to stop slice under top pointer (270deg / -PI/2)
+            // Pointer is at top (3 * PI / 2 rads).
+            // Center of slice i is: currentRotationAngle + i*sliceAngle + sliceAngle/2
+            // We want: (currentRotationAngle + i*sliceAngle + sliceAngle/2) % 2PI = 3*PI/2 (top)
+            
+            const sliceCenterOffset = targetIndex * sliceAngle + (sliceAngle / 2);
+            const targetPointerAngle = (3 * Math.PI / 2); // 270 degrees in radians
+            
+            // Full rotations (5 to 8 full spins for excitement)
+            const extraRotations = (5 + Math.floor(Math.random() * 3)) * (2 * Math.PI);
+            
+            // Current normalized angle
+            const currentNorm = currentRotationAngle % (2 * Math.PI);
+            
+            // Calculate total target rotation
+            let targetAngle = currentRotationAngle + extraRotations + (targetPointerAngle - sliceCenterOffset - currentNorm);
+            if (targetAngle <= currentRotationAngle) {
+                targetAngle += (2 * Math.PI);
+            }
+
+            const startTime = performance.now();
+            const duration = 4500; // 4.5 seconds spin animation
+            const startAngle = currentRotationAngle;
+
+            let lastTickSlice = -1;
+
+            // Easing function: Cubic Out for realistic slowdown
+            function easeOutCubic(t) {
+                return 1 - Math.pow(1 - t, 3);
+            }
+
+            function animateSpin(now) {
+                const elapsed = now - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                const easedProgress = easeOutCubic(progress);
+
+                currentRotationAngle = startAngle + (targetAngle - startAngle) * easedProgress;
+                drawWheel();
+
+                // Sound tick when crossing slice boundary
+                const currentSliceUnderPointer = Math.floor(
+                    ((3 * Math.PI / 2 - (currentRotationAngle % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI)) / sliceAngle
+                );
+                
+                if (currentSliceUnderPointer !== lastTickSlice) {
+                    playSound('tick');
+                    lastTickSlice = currentSliceUnderPointer;
+                }
+
+                if (progress < 1) {
+                    requestAnimationFrame(animateSpin);
+                } else {
+                    // SPIN COMPLETED EXACTLY ON TARGET
+                    isSpinning = false;
+                    currentQuestion = targetQ;
+                    playSound('fanfare');
+
+                    setTimeout(() => {
+                        showQuestionModal(targetQ);
+                        spinBtn.disabled = false;
+                        document.getElementById('wheelStatus').innerText = "Tekan butang di atas untuk memutar roda soalan.";
+                    }, 500);
+                }
+            }
+
+            requestAnimationFrame(animateSpin);
+        }
+
+        /* ----------------------------------------------------
+           6. QUESTION MODAL & PROGRESS MANAGEMENT
+        ---------------------------------------------------- */
+        function showQuestionModal(question) {
+            playSound('cardOpen');
+            setBgVolume(0.01); // Lower background music volume during reading
+
+            document.getElementById('modalQuestionNumber').innerText = `SOALAN KBAT #${question.id}`;
+            document.getElementById('modalQuestionText').innerText = question.text;
+
+            const modal = document.getElementById('questionModal');
+            modal.classList.remove('hidden');
+
+            // Mark question as completed
+            if (!completedQuestions.includes(question.id)) {
+                completedQuestions.push(question.id);
+            }
+            updateProgressUI();
+            drawWheel();
+        }
+
+        function closeQuestionModal() {
+            playSound('click');
+            setBgVolume(0.05); // Restore background music volume
+            document.getElementById('questionModal').classList.add('hidden');
+
+            // Check if all 7 questions are done
+            if (completedQuestions.length === 7) {
+                setTimeout(() => {
+                    showVictoryScreen();
+                }, 400);
+            }
+        }
+
+        /* ----------------------------------------------------
+           7. VICTORY & RESTART LOGIC
+        ---------------------------------------------------- */
+        function showVictoryScreen() {
+            playSound('victory');
+
+            document.getElementById('gameScreen').classList.add('hidden');
+            document.getElementById('victoryScreen').classList.remove('hidden');
+            document.getElementById('victoryScreen').classList.add('flex');
+
+            // Trigger Jalur Gemilang Confetti (Yellow, Red, Blue, White)
+            if (typeof confetti === 'function') {
+                confetti({
+                    particleCount: 120,
+                    spread: 80,
+                    origin: { y: 0.6 },
+                    colors: ['#ffcc00', '#cc0000', '#000066', '#ffffff']
+                });
+            }
+        }
+
+        function restartGame() {
+            playSound('click');
+            completedQuestions = [];
+            currentQuestion = null;
+            currentRotationAngle = 0;
+
+            document.getElementById('victoryScreen').classList.add('hidden');
+            document.getElementById('victoryScreen').classList.remove('flex');
+            document.getElementById('gameScreen').classList.remove('hidden');
+            document.getElementById('gameScreen').classList.add('flex');
+
+            updateProgressUI();
+            drawWheel();
+        }
+
+        // Initialize wheel on initial load
+        window.onload = function() {
+            drawWheel();
+        };
+    </script>
+</body>
+</html>
